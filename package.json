@@ -12,6 +12,8 @@
     "lint:fix": "oxlint --fix"
   },
   "dependencies": {
+    "@coinbase/cdp-core": "^0.0.85",
+    "@coinbase/cdp-hooks": "^0.0.85",
     "@coinbase/cdp-react": "^0.0.83",
     "@coinbase/onchainkit": "^1.1.2",
     "@tanstack/react-query": "^5.90.20",
