@@ -1,4 +1,4 @@
-import type { GiftCardSummary } from "@/lib/api";
+import type { GiftCardSummary } from "@/lib/api/types";
 
 export type DashboardStep = "form" | "payment" | "success" | "redeem";
 

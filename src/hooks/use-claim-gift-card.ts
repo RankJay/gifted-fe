@@ -1,7 +1,11 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { claimGiftCard, type ClaimGiftCardRequest, type ClaimGiftCardResponse } from "@/lib/api";
+import {
+  claimGiftCard,
+  type ClaimGiftCardRequest,
+  type ClaimGiftCardResponse,
+} from "@/lib/api/claim";
 
 /**
  * React Query hook for claiming a gift card

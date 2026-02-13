@@ -1,24 +1,17 @@
 "use client";
 
-import { use } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Gift, Copy, Check } from "lucide-react";
-import { DashboardContext } from "./dashboard-context";
+import { useRequiredDashboardContext } from "@/hooks/use-required-dashboard-context";
 
 export function DashboardSuccess() {
-  const context = use(DashboardContext);
-
-  if (!context) {
-    throw new Error("DashboardSuccess must be used within DashboardProvider");
-  }
-
   const {
     state: { claimLink, copied },
     actions: { handleCopyLink, handleCreateAnother },
-  } = context;
+  } = useRequiredDashboardContext();
 
   if (!claimLink) return null;
 

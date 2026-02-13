@@ -1,7 +1,11 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { redeemGiftCard, type RedeemGiftCardRequest, type RedeemGiftCardResponse } from "@/lib/api";
+import {
+  redeemGiftCard,
+  type RedeemGiftCardRequest,
+  type RedeemGiftCardResponse,
+} from "@/lib/api/gift-card";
 
 /**
  * React Query hook for redeeming a gift card

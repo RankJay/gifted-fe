@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getUserGiftCards, type UserGiftCardsResponse } from "@/lib/api";
+import { getUserGiftCards, type UserGiftCardsResponse } from "@/lib/api/user";
 
 /**
  * React Query hook for fetching user's gift cards

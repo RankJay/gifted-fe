@@ -1,6 +1,18 @@
+import { GIFT_CARD_AMOUNT } from "./constants";
+
 /**
- * Date formatting utilities
+ * Format amount for display (2 decimal places)
  */
+export function formatAmount(amount: string | number): string {
+  return parseFloat(String(amount)).toFixed(2);
+}
+
+/**
+ * Human-readable amount range label for forms
+ */
+export function getAmountRangeLabel(): string {
+  return `$${GIFT_CARD_AMOUNT.MIN}.00 and $${GIFT_CARD_AMOUNT.MAX}.00`;
+}
 
 /**
  * Format a date string to a readable format

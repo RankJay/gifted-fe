@@ -5,7 +5,7 @@ import {
   initiateGiftCard,
   type InitiateGiftCardRequest,
   type InitiateGiftCardResponse,
-} from "@/lib/api";
+} from "@/lib/api/gift-card";
 
 /**
  * React Query hook for creating gift cards

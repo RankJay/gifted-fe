@@ -5,7 +5,7 @@ import {
   confirmEoaFunding,
   type ConfirmEoaFundingRequest,
   type ConfirmEoaFundingResponse,
-} from "@/lib/api";
+} from "@/lib/api/gift-card";
 
 /**
  * React Query hook for confirming EOA funding

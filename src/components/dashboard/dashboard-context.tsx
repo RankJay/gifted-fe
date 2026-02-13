@@ -14,9 +14,5 @@ interface DashboardProviderProps {
 
 export function DashboardProvider({ children }: DashboardProviderProps) {
   const value = useDashboard();
-  return (
-    <DashboardContext.Provider value={value}>
-      {children}
-    </DashboardContext.Provider>
-  );
+  return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { use } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -12,21 +11,15 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Gift, Wallet } from "lucide-react";
-import { formatDate } from "@/lib/format";
-import { DashboardContext } from "./dashboard-context";
+import { useRequiredDashboardContext } from "@/hooks/use-required-dashboard-context";
+import { formatAmount, formatDate } from "@/lib/format";
 
 export function DashboardRedeem() {
-  const context = use(DashboardContext);
-
-  if (!context) {
-    throw new Error("DashboardRedeem must be used within DashboardProvider");
-  }
-
   const {
     state: { claimedGiftCards },
     actions: { setStep, handleRedeem },
     meta: { isRedeeming },
-  } = context;
+  } = useRequiredDashboardContext();
 
   return (
     <Card>
@@ -60,9 +53,7 @@ export function DashboardRedeem() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Gift className="size-5 text-primary" />
-                        <span className="text-2xl font-bold">
-                          ${parseFloat(card.amount).toFixed(2)}
-                        </span>
+                        <span className="text-2xl font-bold">${formatAmount(card.amount)}</span>
                       </div>
                       {card.personalMessage && (
                         <p className="text-sm text-muted-foreground mt-2">{card.personalMessage}</p>

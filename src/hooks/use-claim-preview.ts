@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getClaimPreview, type ClaimPreviewResponse } from "@/lib/api";
+import { getClaimPreview, type ClaimPreviewResponse } from "@/lib/api/claim";
 
 /**
  * React Query hook for fetching claim preview

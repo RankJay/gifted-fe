@@ -1,47 +1,26 @@
 "use client";
 
-import { use } from "react";
-import { useRedirect } from "@/hooks/use-redirect";
-import { Spinner } from "@/components/ui/spinner";
+import { AuthRedirect } from "@/components/auth/auth-redirect";
+import { PageLoader } from "@/components/layout/page-loader";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
-import { DashboardContext } from "./dashboard-context";
+import { useRequiredDashboardContext } from "@/hooks/use-required-dashboard-context";
 import { DashboardSidebar } from "./dashboard-sidebar";
 import { DashboardForm } from "./dashboard-form";
 import { DashboardPayment } from "./dashboard-payment";
 import { DashboardSuccess } from "./dashboard-success";
 import { DashboardRedeem } from "./dashboard-redeem";
 
-function AuthRedirect() {
-  useRedirect("/");
-  return null;
-}
-
 export function DashboardContent() {
-  const context = use(DashboardContext);
-
-  if (!context) {
-    throw new Error("DashboardContent must be used within DashboardProvider");
-  }
-
   const {
     state: { step, claimedGiftCards },
     actions: { setStep },
     meta: { isLoading, user },
-  } = context;
+  } = useRequiredDashboardContext();
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Spinner />
-      </div>
-    );
-  }
-
-  if (!user?.userId || !user?.evmAddress) {
-    return <AuthRedirect />;
-  }
+  if (isLoading) return <PageLoader />;
+  if (!user?.userId || !user?.evmAddress) return <AuthRedirect />;
 
   const canRedeem = claimedGiftCards.length > 0;
 

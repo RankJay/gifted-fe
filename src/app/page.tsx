@@ -2,19 +2,19 @@
 
 import { Logo } from "@/components/icons/logo-b";
 import { AuthButton } from "@coinbase/cdp-react/components/AuthButton";
-import { useIsSignedIn } from "@coinbase/cdp-hooks";
+import { useCdpAuth } from "@/hooks/use-cdp-auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Home() {
-  const { isSignedIn } = useIsSignedIn();
+  const { isAuthenticated } = useCdpAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (isSignedIn) {
-      router.push("/dashboard");
+    if (isAuthenticated) {
+      router.replace("/dashboard");
     }
-  }, [isSignedIn, router]);
+  }, [isAuthenticated, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-zinc-950">

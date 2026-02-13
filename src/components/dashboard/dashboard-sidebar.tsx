@@ -1,6 +1,5 @@
 "use client";
 
-import { use } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -21,19 +20,13 @@ import {
 } from "@/components/ui/empty";
 import { Badge } from "@/components/ui/badge";
 import { Gift, Calendar } from "lucide-react";
-import { formatDate } from "@/lib/format";
-import { DashboardContext } from "./dashboard-context";
+import { useRequiredDashboardContext } from "@/hooks/use-required-dashboard-context";
+import { formatAmount, formatDate } from "@/lib/format";
 
 export function DashboardSidebar() {
-  const context = use(DashboardContext);
-
-  if (!context) {
-    throw new Error("DashboardSidebar must be used within DashboardProvider");
-  }
-
   const {
     state: { giftCards },
-  } = context;
+  } = useRequiredDashboardContext();
 
   return (
     <Sidebar>
@@ -65,9 +58,7 @@ export function DashboardSidebar() {
                       <div className="flex w-full items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                           <Gift className="size-4 shrink-0 text-muted-foreground" />
-                          <span className="font-medium truncate">
-                            ${parseFloat(card.amount).toFixed(2)}
-                          </span>
+                          <span className="font-medium truncate">${formatAmount(card.amount)}</span>
                           <Badge variant="outline" className="shrink-0">
                             {card.status}
                           </Badge>

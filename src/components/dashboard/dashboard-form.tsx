@@ -1,27 +1,21 @@
 "use client";
 
-import { use } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Field, FieldLabel, FieldContent, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { DashboardContext } from "./dashboard-context";
-import { CHARACTER_LIMITS } from "@/lib/constants";
+import { useRequiredDashboardContext } from "@/hooks/use-required-dashboard-context";
+import { CHARACTER_LIMITS, GIFT_CARD_AMOUNT } from "@/lib/constants";
+import { getAmountRangeLabel } from "@/lib/format";
 
 export function DashboardForm() {
-  const context = use(DashboardContext);
-
-  if (!context) {
-    throw new Error("DashboardForm must be used within DashboardProvider");
-  }
-
   const {
     state: { amount, personalMessage, recipientEmail },
     actions: { setAmount, setPersonalMessage, setRecipientEmail, handleSubmitForm },
     meta: { amountInputRef, isCreating, isRegistering, canSubmitForm, amountError, emailError },
-  } = context;
+  } = useRequiredDashboardContext();
 
   return (
     <Card>
@@ -44,7 +38,7 @@ export function DashboardForm() {
                   ref={amountInputRef}
                   type="text"
                   inputMode="decimal"
-                  placeholder="10.00"
+                  placeholder={`${GIFT_CARD_AMOUNT.MIN}.00`}
                   value={amount}
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^0-9.]/g, "");
@@ -63,7 +57,7 @@ export function DashboardForm() {
                 </FieldError>
               ) : (
                 <p className="text-muted-foreground text-xs mt-1">
-                  Amount must be between $10.00 and $100.00
+                  Amount must be between {getAmountRangeLabel()}
                 </p>
               )}
             </FieldContent>

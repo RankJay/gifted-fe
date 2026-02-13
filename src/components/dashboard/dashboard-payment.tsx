@@ -1,6 +1,5 @@
 "use client";
 
-import { use } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Field, FieldLabel, FieldContent, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -8,20 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Separator } from "@/components/ui/separator";
 import { Copy } from "lucide-react";
-import { DashboardContext } from "./dashboard-context";
+import { useRequiredDashboardContext } from "@/hooks/use-required-dashboard-context";
+import { formatAmount } from "@/lib/format";
 
 export function DashboardPayment() {
-  const context = use(DashboardContext);
-
-  if (!context) {
-    throw new Error("DashboardPayment must be used within DashboardProvider");
-  }
-
   const {
     state: { amount, txHash, initiatedGiftCard },
     actions: { setTxHash, setStep, handleCopyAddress, handleConfirmPayment },
     meta: { isConfirming, canSubmitPayment, txHashError },
-  } = context;
+  } = useRequiredDashboardContext();
 
   if (!initiatedGiftCard) return null;
 
@@ -57,16 +51,16 @@ export function DashboardPayment() {
             <div className="rounded-lg bg-muted p-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm">Amount:</span>
-                <span className="font-semibold">${parseFloat(amount).toFixed(2)}</span>
+                <span className="font-semibold">${formatAmount(amount)}</span>
               </div>
               <div className="flex justify-between items-center mt-2">
                 <span className="text-sm">Fee:</span>
-                <span className="font-semibold">${initiatedGiftCard.fee}</span>
+                <span className="font-semibold">${formatAmount(initiatedGiftCard.fee)}</span>
               </div>
               <Separator className="my-2" />
               <div className="flex justify-between items-center">
                 <span className="font-medium">Total:</span>
-                <span className="font-bold text-lg">${initiatedGiftCard.totalCharged} USDC</span>
+                <span className="font-bold text-lg">${formatAmount(initiatedGiftCard.totalCharged)} USDC</span>
               </div>
             </div>
           </div>
