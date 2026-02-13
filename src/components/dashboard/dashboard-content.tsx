@@ -4,13 +4,14 @@ import { AuthRedirect } from "@/components/auth/auth-redirect";
 import { PageLoader } from "@/components/layout/page-loader";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Wallet } from "lucide-react";
+import { Wallet, LogOut } from "lucide-react";
 import { useRequiredDashboardContext } from "@/hooks/use-required-dashboard-context";
 import { DashboardSidebar } from "./dashboard-sidebar";
 import { DashboardForm } from "./dashboard-form";
 import { DashboardPayment } from "./dashboard-payment";
 import { DashboardSuccess } from "./dashboard-success";
 import { DashboardRedeem } from "./dashboard-redeem";
+import { SignOutButton } from "@coinbase/cdp-react/components/SignOutButton";
 
 export function DashboardContent() {
   const {
@@ -18,7 +19,6 @@ export function DashboardContent() {
     actions: { setStep },
     meta: { isLoading, user },
   } = useRequiredDashboardContext();
-
   if (isLoading) return <PageLoader />;
   if (!user?.userId || !user?.evmAddress) return <AuthRedirect />;
 
@@ -35,17 +35,23 @@ export function DashboardContent() {
                 <SidebarTrigger />
                 <h1 className="text-lg font-semibold">Dashboard</h1>
               </div>
-              {canRedeem && step === "form" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setStep("redeem")}
-                  className="gap-2"
-                >
-                  <Wallet className="size-4" />
-                  Redeem ({claimedGiftCards.length})
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {canRedeem && step === "form" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setStep("redeem")}
+                    className="gap-2"
+                  >
+                    <Wallet className="size-4" />
+                    Redeem ({claimedGiftCards.length})
+                  </Button>
+                )}
+                <SignOutButton>
+                  <LogOut className="size-4" />
+                    Sign Out
+                </SignOutButton>
+              </div>
             </div>
 
             {step === "form" && <DashboardForm />}
