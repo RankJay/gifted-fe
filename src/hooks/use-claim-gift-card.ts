@@ -1,11 +1,7 @@
-"use client"
+"use client";
 
-import { useMutation } from "@tanstack/react-query"
-import {
-  claimGiftCard,
-  type ClaimGiftCardRequest,
-  type ClaimGiftCardResponse,
-} from "@/lib/api"
+import { useMutation } from "@tanstack/react-query";
+import { claimGiftCard, type ClaimGiftCardRequest, type ClaimGiftCardResponse } from "@/lib/api";
 
 /**
  * React Query hook for claiming a gift card
@@ -17,5 +13,5 @@ export function useClaimGiftCard() {
     { claimSecret: string; data: ClaimGiftCardRequest }
   >({
     mutationFn: ({ claimSecret, data }) => claimGiftCard(claimSecret, data),
-  })
+  });
 }

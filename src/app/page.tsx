@@ -1,21 +1,20 @@
-"use client"
+"use client";
 
-import { Logo } from "@/components/icons/logo-b"
-import { AuthButton } from "@coinbase/cdp-react/components/AuthButton"
-import { useIsSignedIn } from "@coinbase/cdp-hooks"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { Logo } from "@/components/icons/logo-b";
+import { AuthButton } from "@coinbase/cdp-react/components/AuthButton";
+import { useIsSignedIn } from "@coinbase/cdp-hooks";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
-  const { isSignedIn } = useIsSignedIn()
-  const router = useRouter()
+  const { isSignedIn } = useIsSignedIn();
+  const router = useRouter();
 
   useEffect(() => {
     if (isSignedIn) {
-      router.push("/dashboard")
+      router.push("/dashboard");
     }
-  }, [isSignedIn, router])
+  }, [isSignedIn, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-zinc-950">
@@ -30,5 +29,5 @@ export default function Home() {
         </div>
       </main>
     </div>
-  )
+  );
 }

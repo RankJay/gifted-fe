@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useMutation } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query";
 import {
   confirmEoaFunding,
   type ConfirmEoaFundingRequest,
   type ConfirmEoaFundingResponse,
-} from "@/lib/api"
+} from "@/lib/api";
 
 /**
  * React Query hook for confirming EOA funding
@@ -17,5 +17,5 @@ export function useConfirmEoaFunding() {
     { giftCardId: string; data: ConfirmEoaFundingRequest }
   >({
     mutationFn: ({ giftCardId, data }) => confirmEoaFunding(giftCardId, data),
-  })
+  });
 }

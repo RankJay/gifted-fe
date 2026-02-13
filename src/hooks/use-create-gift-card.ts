@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useMutation } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query";
 import {
   initiateGiftCard,
   type InitiateGiftCardRequest,
   type InitiateGiftCardResponse,
-} from "@/lib/api"
+} from "@/lib/api";
 
 /**
  * React Query hook for creating gift cards
@@ -13,5 +13,5 @@ import {
 export function useCreateGiftCard() {
   return useMutation<InitiateGiftCardResponse, Error, InitiateGiftCardRequest>({
     mutationFn: initiateGiftCard,
-  })
+  });
 }

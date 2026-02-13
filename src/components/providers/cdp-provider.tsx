@@ -1,25 +1,18 @@
-"use client"
+"use client";
 
-import { CDPReactProvider } from "@coinbase/cdp-react"
-import { ReactNode } from "react"
+import { CDPReactProvider } from "@coinbase/cdp-react";
+import { ReactNode } from "react";
+import { CDP_PROJECT_ID } from "@/lib/constants";
 
 interface CDPProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function CDPProvider({ children }: CDPProviderProps) {
-  const projectId = process.env.NEXT_PUBLIC_CDP_PROJECT_ID
-
-  if (!projectId) {
-    console.warn(
-      "NEXT_PUBLIC_CDP_PROJECT_ID is not set. CDP authentication will not work."
-    )
-  }
-
   return (
     <CDPReactProvider
       config={{
-        projectId: projectId || "",
+        projectId: CDP_PROJECT_ID,
         ethereum: {
           createOnLogin: "eoa",
         },
@@ -28,5 +21,5 @@ export function CDPProvider({ children }: CDPProviderProps) {
     >
       {children}
     </CDPReactProvider>
-  )
+  );
 }

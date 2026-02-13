@@ -1,43 +1,47 @@
-"use client"
+"use client";
 
-import { useParams, useRouter } from "next/navigation"
-import { useCdpAuth } from "@/hooks/use-cdp-auth"
-import { useClaimPreview } from "@/hooks/use-claim-preview"
-import { useClaimGiftCard } from "@/hooks/use-claim-gift-card"
-import { useRegisterUser } from "@/hooks/use-register-user"
-import { toast } from "sonner"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
-import { Separator } from "@/components/ui/separator"
-import { Gift, Mail, Calendar, CheckCircle2, XCircle } from "lucide-react"
-import { useEffect } from "react"
+import { useParams, useRouter } from "next/navigation";
+import { useCdpAuth } from "@/hooks/use-cdp-auth";
+import { useClaimPreview } from "@/hooks/use-claim-preview";
+import { useClaimGiftCard } from "@/hooks/use-claim-gift-card";
+import { useRegisterUser } from "@/hooks/use-register-user";
+import { toast } from "sonner";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Separator } from "@/components/ui/separator";
+import { Gift, Mail, Calendar, CheckCircle2, XCircle } from "lucide-react";
+import { useEffect } from "react";
+import { formatDate } from "@/lib/format";
+import { GIFT_CARD_STATUS, VALIDATION_PATTERNS } from "@/lib/constants";
 
 export default function ClaimPage() {
-  const params = useParams()
-  const router = useRouter()
-  const claimSecret = params?.claimSecret as string
-  const { user, isLoading: authLoading } = useCdpAuth()
-  const { data: preview, isLoading: previewLoading, error: previewError } = useClaimPreview(
-    claimSecret || null
-  )
-  const { mutate: registerUser, isPending: isRegistering } = useRegisterUser()
-  const { mutate: claimCard, isPending: isClaiming } = useClaimGiftCard()
+  const params = useParams();
+  const router = useRouter();
+  const claimSecret = params?.claimSecret as string;
+  const { user, isLoading: authLoading } = useCdpAuth();
+  const {
+    data: preview,
+    isLoading: previewLoading,
+    error: previewError,
+  } = useClaimPreview(claimSecret || null);
+  const { mutate: registerUser, isPending: isRegistering } = useRegisterUser();
+  const { mutate: claimCard, isPending: isClaiming } = useClaimGiftCard();
 
   useEffect(() => {
-    if (!claimSecret || !/^[a-fA-F0-9]{64}$/.test(claimSecret)) {
-      toast.error("Invalid claim link")
-      router.push("/")
+    if (!claimSecret || !VALIDATION_PATTERNS.CLAIM_SECRET.test(claimSecret)) {
+      toast.error("Invalid claim link");
+      router.push("/");
     }
-  }, [claimSecret, router])
+  }, [claimSecret, router]);
 
   const handleRegisterAndClaim = async () => {
     if (!user?.userId || !user?.evmAddress || !user?.email) {
-      toast.error("Please sign in with a wallet to claim this gift card")
-      return
+      toast.error("Please sign in with a wallet to claim this gift card");
+      return;
     }
 
-    if (!claimSecret) return
+    if (!claimSecret) return;
 
     // Register user first if needed
     registerUser(
@@ -47,18 +51,28 @@ export default function ClaimPage() {
       },
       {
         onSuccess: () => {
-          handleClaim()
+          handleClaim();
         },
         onError: (err) => {
-          // If user already exists, continue anyway
-          handleClaim()
+          // Backend returns existing user on success, so if registration fails
+          // with a conflict (409), user likely already exists - proceed to claim
+          // For other errors, show error and don't proceed
+          const errorMessage = err.message || "";
+          if (
+            errorMessage.toLowerCase().includes("already exists") ||
+            errorMessage.toLowerCase().includes("conflict")
+          ) {
+            handleClaim();
+          } else {
+            toast.error(errorMessage || "Failed to register user");
+          }
         },
-      }
-    )
-  }
+      },
+    );
+  };
 
   const handleClaim = () => {
-    if (!user?.userId || !user?.evmAddress || !claimSecret) return
+    if (!user?.userId || !user?.evmAddress || !claimSecret) return;
 
     claimCard(
       {
@@ -70,33 +84,22 @@ export default function ClaimPage() {
       },
       {
         onSuccess: () => {
-          toast.success("Gift card claimed successfully!")
-          router.push("/dashboard")
+          toast.success("Gift card claimed successfully!");
+          router.push("/dashboard");
         },
         onError: (err) => {
-          toast.error(err.message || "Failed to claim gift card")
+          toast.error(err.message || "Failed to claim gift card");
         },
-      }
-    )
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(date)
-  }
+      },
+    );
+  };
 
   if (authLoading || previewLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Spinner />
       </div>
-    )
+    );
   }
 
   if (previewError) {
@@ -121,16 +124,16 @@ export default function ClaimPage() {
           </CardFooter>
         </Card>
       </div>
-    )
+    );
   }
 
   if (!preview) {
-    return null
+    return null;
   }
 
-  const isClaimed = preview.status === "claimed"
-  const isRedeemed = preview.status === "redeemed"
-  const isActive = preview.status === "active"
+  const isClaimed = preview.status === GIFT_CARD_STATUS.CLAIMED;
+  const isRedeemed = preview.status === GIFT_CARD_STATUS.REDEEMED;
+  const isActive = preview.status === GIFT_CARD_STATUS.ACTIVE;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
@@ -170,7 +173,7 @@ export default function ClaimPage() {
               <Calendar className="size-4 text-muted-foreground" />
               <div>
                 <p className="text-xs text-muted-foreground">Sent on</p>
-                <p className="text-sm font-medium">{formatDate(preview.createdAt)}</p>
+                <p className="text-sm font-medium">{formatDate(preview.createdAt, true)}</p>
               </div>
             </div>
           </div>
@@ -235,5 +238,5 @@ export default function ClaimPage() {
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }
