@@ -54,3 +54,23 @@ export type PaymentMethod = (typeof PAYMENT_METHOD)[keyof typeof PAYMENT_METHOD]
 
 export const API_BASE_URL: string = process.env.NEXT_PUBLIC_API_URL as string;
 export const CDP_PROJECT_ID: string = process.env.NEXT_PUBLIC_CDP_PROJECT_ID as string;
+
+// Chain config for EOA transfer payment (align with backend NetworkId)
+// NEXT_PUBLIC_CHAIN_NETWORK: "base-sepolia" | "base-mainnet"
+export const CHAIN_NETWORK: string = process.env.NEXT_PUBLIC_CHAIN_NETWORK ?? "base-sepolia";
+
+// USDC contract address on target chain (must match backend)
+export const USDC_CONTRACT_ADDRESS: string = process.env
+  .NEXT_PUBLIC_USDC_CONTRACT_ADDRESS as string;
+
+// WalletConnect project ID (required for RainbowKit)
+export const WALLETCONNECT_PROJECT_ID: string = process.env
+  .NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID as string;
+
+// Web3 Configuration
+export const USDC_DECIMALS = 6;
+
+// Helper: Get CDP network name from CHAIN_NETWORK
+export function getCdpNetworkName(): "base" | "base-sepolia" {
+  return CHAIN_NETWORK === "base-mainnet" ? "base" : "base-sepolia";
+}

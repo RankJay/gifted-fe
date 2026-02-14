@@ -49,7 +49,7 @@ export function DashboardContent() {
                 )}
                 <SignOutButton>
                   <LogOut className="size-4" />
-                    Sign Out
+                  Sign Out
                 </SignOutButton>
               </div>
             </div>

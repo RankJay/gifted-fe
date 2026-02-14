@@ -43,6 +43,8 @@ export interface DashboardActions {
   handleCreateGiftCard: () => void;
   handleSubmitForm: (e: React.FormEvent<HTMLFormElement>) => void;
   handleConfirmPayment: (e: React.FormEvent<HTMLFormElement>) => void;
+  handlePayWithCdpWallet: () => Promise<void>;
+  handlePayWithExternalWallet: () => Promise<void>;
   handleCopyLink: () => void;
   handleCopyAddress: () => void;
   handleCreateAnother: () => void;
@@ -58,11 +60,26 @@ export interface DashboardMeta {
   isCreating: boolean;
   isConfirming: boolean;
   isRedeeming: boolean;
+  isPayingWithCdp: boolean;
+  isPayingWithExternal: boolean;
   canSubmitForm: boolean;
   canSubmitPayment: boolean;
   amountError: string | null;
   emailError: string | null;
   txHashError: string | null;
+  cdpUsdcBalance: string;
+  cdpUsdcBalanceLoading: boolean;
+  externalWallet: {
+    address: string | null;
+    balance: string;
+    isBalanceLoading: boolean;
+    isConnecting: boolean;
+    isSending: boolean;
+    hasInjectedWallet: boolean;
+    connectError: string | null;
+    connect: () => void;
+    disconnect: () => void;
+  };
 }
 
 export interface DashboardContextValue {

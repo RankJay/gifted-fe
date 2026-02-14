@@ -7,10 +7,14 @@ import { useConfirmEoaFunding } from "@/hooks/use-confirm-funding";
 import { useRegisterAndThen } from "@/hooks/use-register-and-then";
 import { useUserGiftCards } from "@/hooks/use-user-gift-cards";
 import { useRedeemGiftCard } from "@/hooks/use-redeem-gift-card";
+import { useUsdcBalance } from "@/hooks/use-usdc-balance";
+import { useExternalWallet } from "@/hooks/use-external-wallet";
+import { usePublicClient } from "wagmi";
 import { toast } from "sonner";
+import { sendUsdc } from "@coinbase/cdp-core";
 import { validateAmount, validateEmail, validateTxHash } from "@/lib/validation";
 import { formatAmount } from "@/lib/format";
-import { GIFT_CARD_STATUS, PAYMENT_METHOD, TIMEOUTS } from "@/lib/constants";
+import { GIFT_CARD_STATUS, PAYMENT_METHOD, TIMEOUTS, getCdpNetworkName } from "@/lib/constants";
 import type {
   DashboardContextValue,
   DashboardState,
@@ -34,9 +38,16 @@ export function useDashboard(): DashboardContextValue {
 
   const { registerAndThen, isRegistering } = useRegisterAndThen();
   const { mutate: createGiftCard, isPending: isCreating } = useCreateGiftCard();
-  const { mutate: confirmFunding, isPending: isConfirming } = useConfirmEoaFunding();
+  const { mutateAsync: confirmFundingAsync, isPending: isConfirming } = useConfirmEoaFunding();
   const { mutate: redeemCard, isPending: isRedeeming } = useRedeemGiftCard();
   const { data: giftCardsData, refetch: refetchGiftCards } = useUserGiftCards(user?.userId ?? null);
+  const { balance: cdpUsdcBalance, isLoading: cdpUsdcBalanceLoading } = useUsdcBalance(
+    user?.evmAddress,
+  );
+  const externalWallet = useExternalWallet();
+  const publicClient = usePublicClient();
+  const [isPayingWithCdp, setIsPayingWithCdp] = useState(false);
+  const [isPayingWithExternal, setIsPayingWithExternal] = useState(false);
 
   const giftCards = giftCardsData
     ? Array.from(
@@ -101,21 +112,85 @@ export function useDashboard(): DashboardContextValue {
   const handleConfirmPayment = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!canSubmitPayment || !initiatedGiftCard || !user?.userId || !user?.evmAddress) return;
-    confirmFunding(
-      {
+    confirmFundingAsync({
+      giftCardId: initiatedGiftCard.giftCardId,
+      data: { userId: user.userId, walletAddress: user.evmAddress, txHash: txHash.trim() },
+    })
+      .then((response) => {
+        setClaimLink(response.claimLink);
+        setStep("success");
+        refetchGiftCards();
+        toast.success("Payment confirmed! Gift card is ready.");
+      })
+      .catch((err) => toast.error(err.message || "Failed to confirm payment"));
+  };
+
+  const handlePayWithCdpWallet = async () => {
+    if (!initiatedGiftCard || !user?.userId || !user?.evmAddress) return;
+    if (parseFloat(cdpUsdcBalance) < parseFloat(initiatedGiftCard.totalCharged)) {
+      toast.error("Insufficient USDC balance");
+      return;
+    }
+    setIsPayingWithCdp(true);
+    try {
+      const result = await sendUsdc({
+        to: initiatedGiftCard.treasuryAddress as `0x${string}`,
+        amount: initiatedGiftCard.totalCharged,
+        network: getCdpNetworkName(),
+      });
+      let hash: string;
+      if (result.type === "evm-eoa") hash = result.transactionHash;
+      else if (result.type === "evm-smart") hash = result.userOpHash;
+      else hash = result.transactionSignature;
+
+      if (publicClient && result.type === "evm-eoa") {
+        await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}` });
+      }
+
+      const response = await confirmFundingAsync({
         giftCardId: initiatedGiftCard.giftCardId,
-        data: { userId: user.userId, walletAddress: user.evmAddress, txHash: txHash.trim() },
-      },
-      {
-        onSuccess: (response) => {
-          setClaimLink(response.claimLink);
-          setStep("success");
-          refetchGiftCards();
-          toast.success("Payment confirmed! Gift card is ready.");
+        data: { userId: user.userId, walletAddress: user.evmAddress, txHash: hash },
+      });
+      setClaimLink(response.claimLink);
+      setStep("success");
+      refetchGiftCards();
+      toast.success("Payment confirmed! Gift card is ready.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send payment");
+    } finally {
+      setIsPayingWithCdp(false);
+    }
+  };
+
+  const handlePayWithExternalWallet = async () => {
+    if (!initiatedGiftCard || !user?.userId || !user?.evmAddress || !externalWallet.address) return;
+    if (parseFloat(externalWallet.balance) < parseFloat(initiatedGiftCard.totalCharged)) {
+      toast.error("Insufficient USDC balance");
+      return;
+    }
+    setIsPayingWithExternal(true);
+    try {
+      const hash = await externalWallet.sendUsdcTo(
+        initiatedGiftCard.treasuryAddress,
+        initiatedGiftCard.totalCharged,
+      );
+      const response = await confirmFundingAsync({
+        giftCardId: initiatedGiftCard.giftCardId,
+        data: {
+          userId: user.userId,
+          walletAddress: user.evmAddress,
+          txHash: hash,
         },
-        onError: (err) => toast.error(err.message || "Failed to confirm payment"),
-      },
-    );
+      });
+      setClaimLink(response.claimLink);
+      setStep("success");
+      refetchGiftCards();
+      toast.success("Payment confirmed! Gift card is ready.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send payment");
+    } finally {
+      setIsPayingWithExternal(false);
+    }
   };
 
   const handleCopyLink = async () => {
@@ -195,6 +270,8 @@ export function useDashboard(): DashboardContextValue {
     handleCreateGiftCard,
     handleSubmitForm,
     handleConfirmPayment,
+    handlePayWithCdpWallet,
+    handlePayWithExternalWallet,
     handleCopyLink,
     handleCopyAddress,
     handleCreateAnother,
@@ -210,11 +287,26 @@ export function useDashboard(): DashboardContextValue {
     isCreating,
     isConfirming,
     isRedeeming,
+    isPayingWithCdp,
+    isPayingWithExternal,
     canSubmitForm,
     canSubmitPayment,
     amountError,
     emailError,
     txHashError,
+    cdpUsdcBalance: cdpUsdcBalance,
+    cdpUsdcBalanceLoading,
+    externalWallet: {
+      address: externalWallet.address,
+      balance: externalWallet.balance,
+      isBalanceLoading: externalWallet.isBalanceLoading,
+      isConnecting: externalWallet.isConnecting,
+      isSending: externalWallet.isSending,
+      hasInjectedWallet: externalWallet.hasInjectedWallet,
+      connectError: externalWallet.connectError,
+      connect: externalWallet.connect,
+      disconnect: externalWallet.disconnect,
+    },
   };
 
   return { state, actions, meta };

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
+import { Web3Provider } from "@/components/providers/web3-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { CDPProvider } from "@/components/providers/cdp-provider";
 
@@ -29,7 +30,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <CDPProvider>
-          <ReactQueryProvider>{children}</ReactQueryProvider>
+          <ReactQueryProvider>
+            <Web3Provider>{children}</Web3Provider>
+          </ReactQueryProvider>
           <Toaster />
         </CDPProvider>
       </body>
