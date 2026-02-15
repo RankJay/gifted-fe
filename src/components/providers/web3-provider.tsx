@@ -1,19 +1,25 @@
 "use client";
 
 import "@rainbow-me/rainbowkit/styles.css";
-import { WagmiProvider } from "wagmi";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import dynamic from "next/dynamic";
 import { type ReactNode } from "react";
-import { wagmiConfig } from "@/lib/wagmi-config";
 
-interface Web3ProviderProps {
-  children: ReactNode;
-}
+const Web3Provider = dynamic(
+  async () => {
+    const { wagmiConfig } = await import("@/lib/wagmi-config");
+    const { WagmiProvider } = await import("wagmi");
+    const { RainbowKitProvider } = await import("@rainbow-me/rainbowkit");
+    return {
+      default: function Web3ProviderInner({ children }: { children: ReactNode }) {
+        return (
+          <WagmiProvider config={wagmiConfig}>
+            <RainbowKitProvider>{children}</RainbowKitProvider>
+          </WagmiProvider>
+        );
+      },
+    };
+  },
+  { ssr: false },
+);
 
-export function Web3Provider({ children }: Web3ProviderProps) {
-  return (
-    <WagmiProvider config={wagmiConfig}>
-      <RainbowKitProvider>{children}</RainbowKitProvider>
-    </WagmiProvider>
-  );
-}
+export { Web3Provider };

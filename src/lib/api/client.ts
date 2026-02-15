@@ -42,6 +42,25 @@ function combineAbortSignals(signals: AbortSignal[]): AbortSignal {
   return controller.signal;
 }
 
+function normalizeHeaders(headers: RequestInit["headers"]): Record<string, string> {
+  if (!headers) return {};
+  if (headers instanceof Headers) {
+    const result: Record<string, string> = {};
+    headers.forEach((value, key) => {
+      result[key] = value;
+    });
+    return result;
+  }
+  if (Array.isArray(headers)) {
+    const result: Record<string, string> = {};
+    headers.forEach(([key, value]) => {
+      result[key] = value;
+    });
+    return result;
+  }
+  return headers as Record<string, string>;
+}
+
 function apiRequestEffect<T>(endpoint: string, options?: RequestOptions): Effect.Effect<T, Error> {
   const url = `${API_BASE_URL}${endpoint}`;
   const correlationId = options?.correlationId ?? crypto.randomUUID();
@@ -59,7 +78,7 @@ function apiRequestEffect<T>(endpoint: string, options?: RequestOptions): Effect
             headers: {
               "Content-Type": "application/json",
               "X-Request-ID": correlationId,
-              ...options?.headers,
+              ...normalizeHeaders(options?.headers),
             },
           }),
         catch: (e) => (e instanceof Error ? e : new Error(String(e))),

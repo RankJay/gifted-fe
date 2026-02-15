@@ -14,7 +14,7 @@ export function CDPProvider({ children }: CDPProviderProps) {
       config={{
         projectId: CDP_PROJECT_ID,
         ethereum: {
-          createOnLogin: "eoa",
+          createOnLogin: "smart",
         },
         appName: "Gifted",
       }}

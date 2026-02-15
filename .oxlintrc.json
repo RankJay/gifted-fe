@@ -1,4 +1,11 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "ignorePatterns": ["dist/**", "coverage/**", "vendor/**", "test/snapshots/**"]
+  "ignorePatterns": [
+    "dist/**",
+    "coverage/**",
+    "vendor/**",
+    "test/snapshots/**",
+    ".next/**",
+    "node_modules/**"
+  ]
 }

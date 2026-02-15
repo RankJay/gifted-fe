@@ -119,7 +119,7 @@ export function useDashboard(): DashboardContextValue {
       .then((response) => {
         setClaimLink(response.claimLink);
         setStep("success");
-        refetchGiftCards();
+        void refetchGiftCards();
         toast.success("Payment confirmed! Gift card is ready.");
       })
       .catch((err) => toast.error(err.message || "Failed to confirm payment"));
@@ -137,6 +137,7 @@ export function useDashboard(): DashboardContextValue {
         to: initiatedGiftCard.treasuryAddress as `0x${string}`,
         amount: initiatedGiftCard.totalCharged,
         network: getCdpNetworkName(),
+        useCdpPaymaster: true,
       });
       let hash: string;
       if (result.type === "evm-eoa") hash = result.transactionHash;
@@ -153,7 +154,7 @@ export function useDashboard(): DashboardContextValue {
       });
       setClaimLink(response.claimLink);
       setStep("success");
-      refetchGiftCards();
+      void refetchGiftCards();
       toast.success("Payment confirmed! Gift card is ready.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send payment");
@@ -184,7 +185,7 @@ export function useDashboard(): DashboardContextValue {
       });
       setClaimLink(response.claimLink);
       setStep("success");
-      refetchGiftCards();
+      void refetchGiftCards();
       toast.success("Payment confirmed! Gift card is ready.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send payment");
@@ -236,7 +237,7 @@ export function useDashboard(): DashboardContextValue {
       {
         onSuccess: (response) => {
           toast.success(`Successfully redeemed $${formatAmount(response.amount)} USDC!`);
-          refetchGiftCards();
+          void refetchGiftCards();
           setStep("form");
         },
         onError: (err) => toast.error(err.message || "Failed to redeem gift card"),
