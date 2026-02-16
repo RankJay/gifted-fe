@@ -5,7 +5,7 @@
 
 // Gift Card Amount Constraints
 export const GIFT_CARD_AMOUNT = {
-  MIN: 10,
+  MIN: 2,
   MAX: 100,
   MAX_DECIMAL_PLACES: 2,
 } as const;
