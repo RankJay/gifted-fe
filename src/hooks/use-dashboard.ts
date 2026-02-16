@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useCdpAuth } from "@/hooks/use-cdp-auth";
 import { useCreateGiftCard } from "@/hooks/use-create-gift-card";
 import { useConfirmEoaFunding } from "@/hooks/use-confirm-funding";
+import { useEnsureUserRegistered } from "@/hooks/use-ensure-user-registered";
 import { useRegisterAndThen } from "@/hooks/use-register-and-then";
 import { useUserGiftCards } from "@/hooks/use-user-gift-cards";
 import { useRedeemGiftCard } from "@/hooks/use-redeem-gift-card";
@@ -26,6 +27,8 @@ import type {
 
 export function useDashboard(): DashboardContextValue {
   const { user, isLoading: authLoading } = useCdpAuth();
+  const [backendUserId, setBackendUserId] = useState<string | null>(null);
+  useEnsureUserRegistered({ onRegistered: setBackendUserId });
   const [step, setStep] = useState<DashboardStep>("form");
   const [amount, setAmount] = useState("");
   const [personalMessage, setPersonalMessage] = useState("");
@@ -41,7 +44,9 @@ export function useDashboard(): DashboardContextValue {
   const { mutate: createGiftCard, isPending: isCreating } = useCreateGiftCard();
   const { mutateAsync: confirmFundingAsync, isPending: isConfirming } = useConfirmEoaFunding();
   const { mutate: redeemCard, isPending: isRedeeming } = useRedeemGiftCard();
-  const { data: giftCardsData, refetch: refetchGiftCards } = useUserGiftCards(user?.userId ?? null);
+  const { data: giftCardsData, refetch: refetchGiftCards } = useUserGiftCards(
+    backendUserId ?? null,
+  );
   const { balance: cdpUsdcBalance, isLoading: cdpUsdcBalanceLoading } = useUsdcBalance(
     user?.evmAddress,
   );
@@ -66,18 +71,26 @@ export function useDashboard(): DashboardContextValue {
   const canSubmitPayment = !!txHash && !txHashError && !isConfirming && !!initiatedGiftCard;
 
   const handleRegisterAndCreate = () =>
-    registerAndThen(user, handleCreateGiftCard, {
-      signInMessage: "Please ensure you're signed in with a wallet address",
-    });
+    registerAndThen(
+      user,
+      (bid) => {
+        setBackendUserId(bid);
+        handleCreateGiftCard(bid);
+      },
+      {
+        signInMessage: "Please ensure you're signed in with a wallet address",
+      },
+    );
 
-  const handleCreateGiftCard = () => {
-    if (!user?.userId || !user?.evmAddress) {
+  const handleCreateGiftCard = (backendId?: string) => {
+    const bid = backendId ?? backendUserId;
+    if (!bid || !user?.evmAddress) {
       toast.error("Please ensure you're signed in");
       return;
     }
     createGiftCard(
       {
-        userId: user.userId,
+        userId: bid,
         walletAddress: user.evmAddress,
         amount: parseFloat(amount),
         personalMessage: personalMessage.trim() || undefined,
@@ -125,10 +138,10 @@ export function useDashboard(): DashboardContextValue {
 
   const handleConfirmPayment = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!canSubmitPayment || !initiatedGiftCard || !user?.userId || !user?.evmAddress) return;
+    if (!canSubmitPayment || !initiatedGiftCard || !backendUserId || !user?.evmAddress) return;
     confirmFundingAsync({
       giftCardId: initiatedGiftCard.giftCardId,
-      data: { userId: user.userId, walletAddress: user.evmAddress, txHash: txHash.trim() },
+      data: { userId: backendUserId, walletAddress: user.evmAddress, txHash: txHash.trim() },
     })
       .then((response) => {
         setClaimLink(response.claimLink);
@@ -140,7 +153,7 @@ export function useDashboard(): DashboardContextValue {
   };
 
   const handlePayWithCdpWallet = async () => {
-    if (!initiatedGiftCard || !user?.userId || !user?.evmAddress) return;
+    if (!initiatedGiftCard || !backendUserId || !user?.evmAddress) return;
     if (parseFloat(cdpUsdcBalance) < parseFloat(initiatedGiftCard.totalCharged)) {
       toast.error("Insufficient USDC balance");
       return;
@@ -164,7 +177,7 @@ export function useDashboard(): DashboardContextValue {
 
       const response = await confirmFundingAsync({
         giftCardId: initiatedGiftCard.giftCardId,
-        data: { userId: user.userId, walletAddress: user.evmAddress, txHash: hash },
+        data: { userId: backendUserId, walletAddress: user.evmAddress, txHash: hash },
       });
       setClaimLink(response.claimLink);
       setStep("success");
@@ -178,7 +191,8 @@ export function useDashboard(): DashboardContextValue {
   };
 
   const handlePayWithExternalWallet = async () => {
-    if (!initiatedGiftCard || !user?.userId || !user?.evmAddress || !externalWallet.address) return;
+    if (!initiatedGiftCard || !backendUserId || !user?.evmAddress || !externalWallet.address)
+      return;
     if (!initiatedGiftCard.treasuryAddress) {
       toast.error("Treasury address not available");
       return;
@@ -196,7 +210,7 @@ export function useDashboard(): DashboardContextValue {
       const response = await confirmFundingAsync({
         giftCardId: initiatedGiftCard.giftCardId,
         data: {
-          userId: user.userId,
+          userId: backendUserId,
           walletAddress: user.evmAddress,
           txHash: hash,
         },
@@ -247,12 +261,12 @@ export function useDashboard(): DashboardContextValue {
   };
 
   const handleRedeem = (giftCardId: string) => {
-    if (!user?.userId || !user?.evmAddress) {
+    if (!backendUserId || !user?.evmAddress) {
       toast.error("Please ensure you're signed in");
       return;
     }
     redeemCard(
-      { giftCardId, data: { userId: user.userId, walletAddress: user.evmAddress } },
+      { giftCardId, data: { userId: backendUserId, walletAddress: user.evmAddress } },
       {
         onSuccess: (response) => {
           toast.success(`Successfully redeemed $${formatAmount(response.amount)} USDC!`);

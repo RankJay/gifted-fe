@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCdpAuth } from "@/hooks/use-cdp-auth";
+import { useEnsureUserRegistered } from "@/hooks/use-ensure-user-registered";
 import { PageLoader } from "@/components/layout/page-loader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,9 @@ export default function CreateSuccessPage() {
   const { user, isLoading: authLoading } = useCdpAuth();
   const giftCardId = searchParams.get("giftCardId");
 
+  const [backendUserId, setBackendUserId] = useState<string | null>(null);
+  useEnsureUserRegistered({ onRegistered: setBackendUserId });
+
   const [giftCard, setGiftCard] = useState<GiftCardDetailResponse | null>(null);
   const [pollAttempts, setPollAttempts] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -41,7 +45,7 @@ export default function CreateSuccessPage() {
   }, []);
 
   const pollGiftCardStatus = useCallback(async () => {
-    if (!giftCardId || !user?.userId || !user?.evmAddress) {
+    if (!giftCardId || !backendUserId || !user?.evmAddress) {
       stopPolling();
       return;
     }
@@ -62,7 +66,7 @@ export default function CreateSuccessPage() {
 
     try {
       const latest = await getGiftCardById(giftCardId, {
-        userId: user.userId,
+        userId: backendUserId,
         walletAddress: user.evmAddress,
       });
 
@@ -94,7 +98,7 @@ export default function CreateSuccessPage() {
       toast.error(message);
       stopPolling();
     }
-  }, [giftCardId, user?.userId, user?.evmAddress, stopPolling]);
+  }, [giftCardId, backendUserId, user?.evmAddress, stopPolling]);
 
   useEffect(() => {
     if (!giftCardId) {
@@ -103,7 +107,7 @@ export default function CreateSuccessPage() {
       return;
     }
 
-    if (authLoading) return;
+    if (authLoading || !backendUserId) return;
 
     // Reset polling state
     pollAttemptsRef.current = 0;
@@ -124,7 +128,15 @@ export default function CreateSuccessPage() {
     return () => {
       stopPolling();
     };
-  }, [giftCardId, user?.userId, user?.evmAddress, authLoading, router, pollGiftCardStatus, stopPolling]);
+  }, [
+    giftCardId,
+    backendUserId,
+    user?.evmAddress,
+    authLoading,
+    router,
+    pollGiftCardStatus,
+    stopPolling,
+  ]);
 
   const handleCopyLink = async () => {
     if (!giftCard?.claimLink) return;
@@ -206,7 +218,11 @@ export default function CreateSuccessPage() {
                     size="icon"
                     aria-label={copied ? "Link copied" : "Copy link"}
                   >
-                    {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+                    {copied ? (
+                      <Check className="size-4 text-green-600" />
+                    ) : (
+                      <Copy className="size-4" />
+                    )}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">

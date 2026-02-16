@@ -32,16 +32,16 @@ export function useClaimPage() {
 
   const handleRegisterAndClaim = () => {
     if (!claimSecret) return;
-    registerAndThen(user, handleClaim, {
+    registerAndThen(user, (backendUserId) => handleClaim(backendUserId), {
       signInMessage: "Please sign in with a wallet to claim this gift card",
     });
   };
 
-  const handleClaim = () => {
-    if (!user?.userId || !user?.evmAddress || !claimSecret) return;
+  const handleClaim = (backendUserId: string) => {
+    if (!user?.evmAddress || !claimSecret) return;
 
     claimCard(
-      { claimSecret, data: { userId: user.userId, walletAddress: user.evmAddress } },
+      { claimSecret, data: { userId: backendUserId, walletAddress: user.evmAddress } },
       {
         onSuccess: () => {
           toast.success("Gift card claimed successfully!");

@@ -15,7 +15,13 @@ import { CreditCard, Wallet } from "lucide-react";
 export function DashboardForm() {
   const {
     state: { amount, personalMessage, recipientEmail, paymentMethod },
-    actions: { setAmount, setPersonalMessage, setRecipientEmail, setPaymentMethod, handleSubmitForm },
+    actions: {
+      setAmount,
+      setPersonalMessage,
+      setRecipientEmail,
+      setPaymentMethod,
+      handleSubmitForm,
+    },
     meta: { amountInputRef, isCreating, isRegistering, canSubmitForm, amountError, emailError },
   } = useRequiredDashboardContext();
 
