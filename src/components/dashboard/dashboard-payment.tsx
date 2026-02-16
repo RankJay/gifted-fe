@@ -33,7 +33,7 @@ export function DashboardPayment() {
     },
   } = useRequiredDashboardContext();
 
-  if (!initiatedGiftCard) return null;
+  if (!initiatedGiftCard || !initiatedGiftCard.treasuryAddress) return null;
 
   const totalCharged = parseFloat(initiatedGiftCard.totalCharged);
   const cdpSufficient = parseFloat(cdpUsdcBalance) >= totalCharged;

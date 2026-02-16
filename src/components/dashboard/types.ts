@@ -4,7 +4,8 @@ export type DashboardStep = "form" | "payment" | "success" | "redeem";
 
 export interface InitiatedGiftCard {
   giftCardId: string;
-  treasuryAddress: string;
+  treasuryAddress?: string;
+  onrampUrl?: string;
   totalCharged: string;
   fee: string;
 }
@@ -22,6 +23,7 @@ export interface DashboardState {
   amount: string;
   personalMessage: string;
   recipientEmail: string;
+  paymentMethod: "onramp" | "eoa_transfer";
   txHash: string;
   initiatedGiftCard: InitiatedGiftCard | null;
   claimLink: string | null;
@@ -35,6 +37,7 @@ export interface DashboardActions {
   setAmount: (amount: string) => void;
   setPersonalMessage: (message: string) => void;
   setRecipientEmail: (email: string) => void;
+  setPaymentMethod: (method: "onramp" | "eoa_transfer") => void;
   setTxHash: (hash: string) => void;
   setInitiatedGiftCard: (card: InitiatedGiftCard | null) => void;
   setClaimLink: (link: string | null) => void;

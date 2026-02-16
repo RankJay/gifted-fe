@@ -30,6 +30,7 @@ export function useDashboard(): DashboardContextValue {
   const [amount, setAmount] = useState("");
   const [personalMessage, setPersonalMessage] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"onramp" | "eoa_transfer">("eoa_transfer");
   const [txHash, setTxHash] = useState("");
   const [initiatedGiftCard, setInitiatedGiftCard] = useState<InitiatedGiftCard | null>(null);
   const [claimLink, setClaimLink] = useState<string | null>(null);
@@ -81,22 +82,35 @@ export function useDashboard(): DashboardContextValue {
         amount: parseFloat(amount),
         personalMessage: personalMessage.trim() || undefined,
         recipientEmail: recipientEmail.trim() || undefined,
-        paymentMethod: PAYMENT_METHOD.EOA_TRANSFER,
+        paymentMethod:
+          paymentMethod === "onramp" ? PAYMENT_METHOD.ONRAMP : PAYMENT_METHOD.EOA_TRANSFER,
       },
       {
         onSuccess: (response) => {
-          if (!response.treasuryAddress) {
-            toast.error("Treasury address not provided");
-            return;
+          if (response.onrampUrl) {
+            // Onramp flow: redirect to onramp URL
+            setInitiatedGiftCard({
+              giftCardId: response.giftCardId,
+              onrampUrl: response.onrampUrl,
+              totalCharged: response.totalCharged,
+              fee: response.fee,
+            });
+            // Redirect to onramp URL - will redirect back to /create/success
+            window.location.href = response.onrampUrl;
+            toast.success("Redirecting to payment...");
+          } else if (response.treasuryAddress) {
+            // EOA transfer flow: show payment page
+            setInitiatedGiftCard({
+              giftCardId: response.giftCardId,
+              treasuryAddress: response.treasuryAddress,
+              totalCharged: response.totalCharged,
+              fee: response.fee,
+            });
+            setStep("payment");
+            toast.success("Gift card initiated. Please send payment.");
+          } else {
+            toast.error("Invalid response from server");
           }
-          setInitiatedGiftCard({
-            giftCardId: response.giftCardId,
-            treasuryAddress: response.treasuryAddress,
-            totalCharged: response.totalCharged,
-            fee: response.fee,
-          });
-          setStep("payment");
-          toast.success("Gift card initiated. Please send payment.");
         },
         onError: (err) => toast.error(err.message || "Failed to create gift card"),
       },
@@ -221,6 +235,7 @@ export function useDashboard(): DashboardContextValue {
     setAmount("");
     setPersonalMessage("");
     setRecipientEmail("");
+    setPaymentMethod("eoa_transfer");
     setTxHash("");
     setInitiatedGiftCard(null);
     setClaimLink(null);
@@ -250,6 +265,7 @@ export function useDashboard(): DashboardContextValue {
     amount,
     personalMessage,
     recipientEmail,
+    paymentMethod,
     txHash,
     initiatedGiftCard,
     claimLink,
@@ -263,6 +279,7 @@ export function useDashboard(): DashboardContextValue {
     setAmount,
     setPersonalMessage,
     setRecipientEmail,
+    setPaymentMethod,
     setTxHash,
     setInitiatedGiftCard,
     setClaimLink,

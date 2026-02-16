@@ -42,6 +42,31 @@ export interface RedeemGiftCardResponse {
   status: string;
 }
 
+export interface GiftCardDetailResponse {
+  id: string;
+  senderId: string;
+  amount: string;
+  fee: string;
+  totalCharged: string;
+  status: string;
+  paymentMethod: PaymentMethod;
+  personalMessage: string | null;
+  recipientEmail: string | null;
+  fundingTxHash: string | null;
+  redemptionTxHash: string | null;
+  claimedById: string | null;
+  tokenId: string | null;
+  createdAt: string;
+  claimedAt: string | null;
+  redeemedAt: string | null;
+  claimLink: string | null;
+}
+
+export interface GetGiftCardRequest {
+  userId: string;
+  walletAddress: string;
+}
+
 export async function initiateGiftCard(
   req: InitiateGiftCardRequest,
 ): Promise<InitiateGiftCardResponse> {
@@ -69,4 +94,16 @@ export async function redeemGiftCard(
     method: "POST",
     body: JSON.stringify(req),
   });
+}
+
+export async function getGiftCardById(
+  giftCardId: string,
+  req: GetGiftCardRequest,
+): Promise<GiftCardDetailResponse> {
+  const query = new URLSearchParams({
+    userId: req.userId,
+    walletAddress: req.walletAddress,
+  });
+
+  return apiRequest<GiftCardDetailResponse>(`/giftcard/${giftCardId}?${query.toString()}`);
 }

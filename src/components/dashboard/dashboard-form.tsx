@@ -6,14 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import { useRequiredDashboardContext } from "@/hooks/use-required-dashboard-context";
 import { CHARACTER_LIMITS, GIFT_CARD_AMOUNT } from "@/lib/constants";
 import { getAmountRangeLabel } from "@/lib/format";
+import { CreditCard, Wallet } from "lucide-react";
 
 export function DashboardForm() {
   const {
-    state: { amount, personalMessage, recipientEmail },
-    actions: { setAmount, setPersonalMessage, setRecipientEmail, handleSubmitForm },
+    state: { amount, personalMessage, recipientEmail, paymentMethod },
+    actions: { setAmount, setPersonalMessage, setRecipientEmail, setPaymentMethod, handleSubmitForm },
     meta: { amountInputRef, isCreating, isRegistering, canSubmitForm, amountError, emailError },
   } = useRequiredDashboardContext();
 
@@ -99,6 +101,44 @@ export function DashboardForm() {
                   {emailError}
                 </FieldError>
               ) : null}
+            </FieldContent>
+          </Field>
+
+          <Field>
+            <FieldLabel>Payment Method</FieldLabel>
+            <FieldContent>
+              <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
+                <div
+                  className={`flex flex-1 items-center gap-2 transition-opacity ${
+                    paymentMethod === "eoa_transfer" ? "opacity-100" : "opacity-50"
+                  }`}
+                >
+                  <Wallet className="size-4 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Crypto Transfer</p>
+                    <p className="text-xs text-muted-foreground">Send USDC from your wallet</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={paymentMethod === "onramp"}
+                  onCheckedChange={(checked) =>
+                    setPaymentMethod(checked ? "onramp" : "eoa_transfer")
+                  }
+                  disabled={isCreating || isRegistering}
+                  aria-label="Toggle payment method"
+                />
+                <div
+                  className={`flex flex-1 items-center justify-end gap-2 transition-opacity ${
+                    paymentMethod === "onramp" ? "opacity-100" : "opacity-50"
+                  }`}
+                >
+                  <div className="text-right">
+                    <p className="text-sm font-medium">Onramp</p>
+                    <p className="text-xs text-muted-foreground">Buy with card or bank</p>
+                  </div>
+                  <CreditCard className="size-4 shrink-0" />
+                </div>
+              </div>
             </FieldContent>
           </Field>
         </CardContent>
