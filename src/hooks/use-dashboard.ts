@@ -179,6 +179,10 @@ export function useDashboard(): DashboardContextValue {
 
   const handlePayWithExternalWallet = async () => {
     if (!initiatedGiftCard || !user?.userId || !user?.evmAddress || !externalWallet.address) return;
+    if (!initiatedGiftCard.treasuryAddress) {
+      toast.error("Treasury address not available");
+      return;
+    }
     if (parseFloat(externalWallet.balance) < parseFloat(initiatedGiftCard.totalCharged)) {
       toast.error("Insufficient USDC balance");
       return;
@@ -221,7 +225,7 @@ export function useDashboard(): DashboardContextValue {
   };
 
   const handleCopyAddress = async () => {
-    if (!initiatedGiftCard) return;
+    if (!initiatedGiftCard || !initiatedGiftCard.treasuryAddress) return;
     try {
       await navigator.clipboard.writeText(initiatedGiftCard.treasuryAddress);
       toast.success("Address copied to clipboard!");
