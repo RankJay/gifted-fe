@@ -47,6 +47,7 @@ export default function SendPage() {
     try {
       // Send totalCharged (face value + fee) — backend verifies this exact amount on-chain
       const result = await sendUsdc({
+        from: user.evmAddress as `0x${string}`,
         to: treasuryAddress as `0x${string}`,
         amount: totalCharged,
         network: getCdpNetworkName(),
@@ -62,10 +63,30 @@ export default function SendPage() {
         await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}` });
       }
 
-      const res = await confirmFunding({
-        giftCardId,
-        data: { userId: backendUserId, walletAddress: user.evmAddress, txHash: hash },
-      });
+      // Retry confirmFunding up to 3 times with exponential backoff
+      let res;
+      let lastError: Error | null = null;
+      const maxRetries = 3;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          res = await confirmFunding({
+            giftCardId,
+            data: { userId: backendUserId, walletAddress: user.evmAddress, txHash: hash },
+          });
+          break;
+        } catch (err) {
+          lastError = err instanceof Error ? err : new Error("Unknown error");
+          if (attempt < maxRetries - 1) {
+            const delayMs = Math.pow(2, attempt) * 1000;
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+          }
+        }
+      }
+
+      if (!res) {
+        throw lastError || new Error("Failed to confirm funding after retries");
+      }
 
       const nextParams = new URLSearchParams({
         giftCardId,
