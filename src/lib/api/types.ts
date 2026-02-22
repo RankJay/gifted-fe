@@ -1,7 +1,3 @@
-/**
- * Shared API types
- */
-
 export interface GiftCardSummary {
   id: string;
   amount: string;
@@ -12,4 +8,6 @@ export interface GiftCardSummary {
   redeemedAt: string | null;
   claimLink?: string | null;
   senderEmail?: string | null;
+  senderWalletAddress?: string | null;
+  recipientEmail?: string | null;
 }

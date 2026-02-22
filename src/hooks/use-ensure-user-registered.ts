@@ -18,7 +18,11 @@ export function useEnsureUserRegistered(options?: UseEnsureUserRegisteredOptions
   const { user } = useCdpAuth();
   const { mutate: registerUser } = useRegisterUser();
   const lastEnsured = useRef<string | null>(null);
-  const onRegistered = options?.onRegistered;
+  // Refs keep callbacks current without making them effect deps
+  const onRegisteredRef = useRef(options?.onRegistered);
+  onRegisteredRef.current = options?.onRegistered;
+  const registerUserRef = useRef(registerUser);
+  registerUserRef.current = registerUser;
 
   useEffect(() => {
     if (!user?.email || !user?.evmAddress) return;
@@ -28,14 +32,15 @@ export function useEnsureUserRegistered(options?: UseEnsureUserRegisteredOptions
     if (lastEnsured.current === key) return;
     lastEnsured.current = key;
 
-    registerUser(
+    registerUserRef.current(
       { email: user.email, walletAddress: user.evmAddress },
       {
-        onSuccess: (res) => onRegistered?.(res.userId),
+        onSuccess: (res) => onRegisteredRef.current?.(res.userId),
         onError: () => {
           lastEnsured.current = null;
         },
       },
     );
-  }, [user?.email, user?.evmAddress, onRegistered, registerUser]);
+    // Only re-run when actual user identity changes — callbacks are stable via refs above
+  }, [user?.email, user?.evmAddress]);
 }
