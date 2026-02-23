@@ -128,9 +128,8 @@ export default function SendPage() {
           amount,
           message,
         });
-        // Append return URL so CDP Onramp redirects back to our processing page
-        const returnUrl = `${window.location.origin}/dashboard/send/processing?${processingParams.toString()}`;
-        window.location.href = `${res.onrampUrl}&redirectUrl=${encodeURIComponent(returnUrl)}`;
+
+        window.location.href = res.onrampUrl;
       } else {
         toast.error("Onramp URL not available");
       }
