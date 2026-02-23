@@ -1,13 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { PageLoader } from "@/components/layout/page-loader";
+import { motion, AnimatePresence } from "motion/react";
 import { Spinner } from "@/components/ui/spinner";
-import { Separator } from "@/components/ui/separator";
-import { Gift, Mail, Calendar, CheckCircle2, XCircle } from "lucide-react";
-import { formatAmount, formatDate } from "@/lib/format";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageContainer } from "@/components/layout/page-container";
 import { GIFT_CARD_STATUS } from "@/lib/constants";
 import { useClaimPage } from "@/hooks/use-claim-page";
 
@@ -23,141 +20,123 @@ export function ClaimContent() {
     handleRegisterAndClaim,
   } = useClaimPage();
 
-  if (isLoading) return <PageLoader />;
-
-  if (previewError) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-zinc-950">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-destructive/10">
-              <XCircle className="size-8 text-destructive" />
-            </div>
-            <CardTitle className="text-2xl">Gift Card Not Found</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-muted-foreground">
-              {previewError.message || "This gift card link is invalid or has expired."}
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={() => router.push("/")} className="w-full">
-              Go Home
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!preview) return null;
-
-  const isClaimed = preview.status === GIFT_CARD_STATUS.CLAIMED;
-  const isRedeemed = preview.status === GIFT_CARD_STATUS.REDEEMED;
-  const isActive = preview.status === GIFT_CARD_STATUS.ACTIVE;
+  const isPending = isClaiming || isRegistering;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-zinc-950">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10">
-            <Gift className="size-8 text-primary" />
-          </div>
-          <CardTitle className="text-2xl">You Received a Gift Card!</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-primary">${formatAmount(preview.amount)}</div>
-            <p className="mt-1 text-sm text-muted-foreground">USDC</p>
-          </div>
-
-          <Separator />
-
-          {preview.personalMessage && (
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Personal Message</p>
-              <div className="rounded-lg bg-muted p-4">
-                <p className="whitespace-pre-wrap text-sm">{preview.personalMessage}</p>
-              </div>
+    <PageContainer>
+      <AnimatePresence mode="wait">
+        {isLoading ? (
+          <motion.div
+            key="skeleton"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex flex-col items-center gap-6 pt-12"
+          >
+            <Skeleton className="h-16 w-40 rounded-xl" />
+            <Skeleton className="h-4 w-48 rounded" />
+            <div className="w-full mt-8 space-y-3">
+              <Skeleton className="h-14 w-full rounded-2xl" />
             </div>
-          )}
-
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Mail className="size-4 text-muted-foreground" />
-              <div>
-                <p className="text-xs text-muted-foreground">From</p>
-                <p className="text-sm font-medium">{preview.senderEmail}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Calendar className="size-4 text-muted-foreground" />
-              <div>
-                <p className="text-xs text-muted-foreground">Sent on</p>
-                <p className="text-sm font-medium">{formatDate(preview.createdAt, true)}</p>
-              </div>
-            </div>
-          </div>
-
-          {isClaimed && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="size-5 text-blue-600 dark:text-blue-400" />
-                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                  This gift card has already been claimed
+          </motion.div>
+        ) : previewError ? (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center gap-6 pt-12"
+          >
+            <p className="text-2xl font-bold">Gift card not found</p>
+            <p className="text-sm text-[#8A8A8A] text-center">
+              {previewError.message || "This link is invalid or has expired."}
+            </p>
+            <button
+              onClick={() => router.push("/")}
+              className="w-full h-14 rounded-full bg-foreground text-background text-base font-semibold hover:bg-foreground/90 transition-colors"
+            >
+              Go home
+            </button>
+          </motion.div>
+        ) : preview ? (
+          <motion.div
+            key="content"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="flex flex-col min-h-[calc(100dvh-4rem)]"
+          >
+            {/* Amount + message — same layout as Image 5 */}
+            <div className="flex flex-col items-center gap-2 pt-12 pb-8">
+              <span className="text-7xl font-bold tracking-tighter">
+                {Number(preview.amount).toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+              {preview.personalMessage && (
+                <p className="text-base text-neutral-500 font-medium tracking-tight text-center max-w-60">
+                  {preview.personalMessage}
                 </p>
-              </div>
-            </div>
-          )}
-
-          {isRedeemed && (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="size-5 text-green-600 dark:text-green-400" />
-                <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                  This gift card has already been redeemed
-                </p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-        <CardFooter className="flex-col gap-2">
-          {isActive && (
-            <>
-              {user?.userId && user?.evmAddress ? (
-                <Button
-                  onClick={handleRegisterAndClaim}
-                  disabled={isClaiming || isRegistering}
-                  className="w-full"
-                >
-                  {isClaiming || isRegistering ? (
-                    <>
-                      <Spinner className="mr-2" />
-                      Claiming...
-                    </>
-                  ) : (
-                    "Claim Gift Card"
-                  )}
-                </Button>
-              ) : (
-                <div className="w-full space-y-2">
-                  <p className="text-center text-sm text-muted-foreground">
-                    Please sign in with a wallet to claim this gift card
-                  </p>
-                  <Button onClick={() => router.push("/")} className="w-full" variant="outline">
-                    Go to Sign In
-                  </Button>
-                </div>
               )}
-            </>
-          )}
-          {(isClaimed || isRedeemed) && (
-            <Button onClick={() => router.push("/dashboard")} className="w-full" variant="outline">
-              Go to Dashboard
-            </Button>
-          )}
-        </CardFooter>
-      </Card>
-    </div>
+              <p className="text-xs text-neutral-500 font-medium tracking-tight mt-1">
+                from {preview.senderEmail}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              {preview.status === GIFT_CARD_STATUS.ACTIVE && (
+                <>
+                  {user?.userId && user?.evmAddress ? (
+                    <button
+                      onClick={handleRegisterAndClaim}
+                      disabled={isPending}
+                      className="w-full h-14 rounded-2xl bg-foreground text-background text-base font-medium tracking-tight flex items-center justify-center gap-2 hover:bg-foreground/90 disabled:opacity-50 transition-colors"
+                    >
+                      {isPending ? (
+                        <>
+                          <Spinner className="size-4" />
+                          Claiming...
+                        </>
+                      ) : (
+                        "Claim"
+                      )}
+                    </button>
+                  ) : (
+                    <>
+                      <p className="text-center text-sm text-[#8A8A8A]">
+                        Sign in to claim this gift card
+                      </p>
+                      <button
+                        onClick={() => router.push("/")}
+                        className="w-full h-14 rounded-full bg-foreground text-background text-base font-semibold hover:bg-foreground/90 transition-colors"
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+
+              {(preview.status === GIFT_CARD_STATUS.CLAIMED ||
+                preview.status === GIFT_CARD_STATUS.REDEEMED) && (
+                <>
+                  <p className="text-center text-sm text-[#8A8A8A]">
+                    {preview.status === GIFT_CARD_STATUS.CLAIMED
+                      ? "This gift card has already been claimed."
+                      : "This gift card has already been redeemed."}
+                  </p>
+                  <button
+                    onClick={() => router.push("/dashboard")}
+                    className="w-full h-14 rounded-full bg-foreground text-background text-base font-semibold hover:bg-foreground/90 transition-colors"
+                  >
+                    Go to dashboard
+                  </button>
+                </>
+              )}
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </PageContainer>
   );
 }
