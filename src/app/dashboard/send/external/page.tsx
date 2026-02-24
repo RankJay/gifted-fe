@@ -39,19 +39,12 @@ export default function ExternalWalletPage() {
     }
     setIsSending(true);
     try {
-      // Send totalCharged (amount + fee) — backend verifies this exact amount on-chain
       const hash = await externalWallet.sendUsdcTo(treasuryAddress, totalCharged);
-      const res = await confirmFunding({
+      await confirmFunding({
         giftCardId,
         data: { userId: backendUserId, walletAddress: user.evmAddress, txHash: hash },
       });
-      const nextParams = new URLSearchParams({
-        giftCardId,
-        amount,
-        message,
-        ...(res.claimLink ? { claimLink: res.claimLink } : {}),
-      });
-      router.push(`/dashboard/send/success?${nextParams.toString()}`);
+      router.push(`/dashboard/send/success?giftCardId=${giftCardId}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Transaction failed");
     } finally {
@@ -62,17 +55,11 @@ export default function ExternalWalletPage() {
   const handleConfirmManual = async () => {
     if (!giftCardId || !user?.evmAddress || !backendUserId || txHashError) return;
     try {
-      const res = await confirmFunding({
+      await confirmFunding({
         giftCardId,
         data: { userId: backendUserId, walletAddress: user.evmAddress, txHash: txHash.trim() },
       });
-      const nextParams = new URLSearchParams({
-        giftCardId,
-        amount,
-        message,
-        ...(res.claimLink ? { claimLink: res.claimLink } : {}),
-      });
-      router.push(`/dashboard/send/success?${nextParams.toString()}`);
+      router.push(`/dashboard/send/success?giftCardId=${giftCardId}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to confirm transaction");
     }

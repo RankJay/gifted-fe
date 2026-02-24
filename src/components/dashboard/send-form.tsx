@@ -2,20 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useCdpAuth } from "@/hooks/use-cdp-auth";
 import { useRegisterAndThen } from "@/hooks/use-register-and-then";
-import { useCreateGiftCard } from "@/hooks/use-create-gift-card";
 import { validateAmount, validateEmail } from "@/lib/validation";
-import { PAYMENT_METHOD } from "@/lib/constants";
 
 export function SendForm() {
   const router = useRouter();
   const { user } = useCdpAuth();
   const { registerAndThen, isRegistering } = useRegisterAndThen();
-  const { mutate: createGiftCard, isPending: isCreating } = useCreateGiftCard();
 
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
@@ -23,7 +19,7 @@ export function SendForm() {
 
   const amountError = amount ? validateAmount(amount) : null;
   const emailError = email ? validateEmail(email) : null;
-  const canSubmit = !!amount && !amountError && !emailError && !isCreating && !isRegistering;
+  const canSubmit = !!amount && !amountError && !emailError && !isRegistering;
 
   const handleSubmit = () => {
     if (!canSubmit) return;
@@ -31,39 +27,16 @@ export function SendForm() {
     registerAndThen(
       user,
       (bid) => {
-        if (!user?.evmAddress) return;
-
-        createGiftCard(
-          {
-            userId: bid,
-            walletAddress: user.evmAddress,
-            amount: parseFloat(amount),
-            personalMessage: message.trim() || undefined,
-            recipientEmail: email.trim() || undefined,
-            paymentMethod: PAYMENT_METHOD.EOA_TRANSFER,
-          },
-          {
-            onSuccess: (res) => {
-              const params = new URLSearchParams({
-                amount,
-                message: message.trim(),
-                email: email.trim(),
-                giftCardId: res.giftCardId,
-                totalCharged: res.totalCharged,
-                userId: bid,
-                ...(res.treasuryAddress ? { treasuryAddress: res.treasuryAddress } : {}),
-              });
-              router.push(`/dashboard/send?${params.toString()}`);
-            },
-            onError: (err) => toast.error(err.message || "Failed to create gift card"),
-          },
-        );
+        const params = new URLSearchParams({ amount, userId: bid });
+        if (message.trim()) params.set("message", message.trim());
+        if (email.trim()) params.set("email", email.trim());
+        router.push(`/dashboard/send?${params.toString()}`);
       },
       { signInMessage: "Please sign in to send a gift card" },
     );
   };
 
-  const isPending = isCreating || isRegistering;
+  const isPending = isRegistering;
 
   return (
     <div className="flex flex-col gap-6">
@@ -122,7 +95,7 @@ export function SendForm() {
         {isPending ? (
           <>
             <Spinner className="mr-2" />
-            Creating...
+            Loading...
           </>
         ) : (
           "Send Gift Card"
