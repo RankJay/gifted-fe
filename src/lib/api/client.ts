@@ -71,3 +71,18 @@ export async function apiRequest<T>(endpoint: string, options?: RequestInit): Pr
 
   return response.json() as Promise<T>;
 }
+
+// Adds the Authorization Bearer header when a token is provided
+export async function apiRequestWithAuth<T>(
+  endpoint: string,
+  token: string,
+  options?: RequestInit,
+): Promise<T> {
+  return apiRequest<T>(endpoint, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...normalizeHeaders(options?.headers),
+    },
+  });
+}

@@ -4,8 +4,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { formatAmount, truncateAddress } from "@/lib/format";
-import { useCdpAuth } from "@/hooks/use-cdp-auth";
-import { useBackendUser } from "@/components/providers/backend-user-context";
 import { useRedeemGiftCard } from "@/hooks/use-redeem-gift-card";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -17,8 +15,6 @@ interface TransactionItemProps {
 
 export function TransactionItem({ item }: TransactionItemProps) {
   const router = useRouter();
-  const { user } = useCdpAuth();
-  const { backendUserId } = useBackendUser();
   const queryClient = useQueryClient();
   const { mutate: redeemCard, isPending: isRedeeming } = useRedeemGiftCard();
 
@@ -42,12 +38,8 @@ export function TransactionItem({ item }: TransactionItemProps) {
   };
 
   const handleRedeem = () => {
-    if (!backendUserId || !user?.evmAddress) {
-      toast.error("Please sign in to redeem");
-      return;
-    }
     redeemCard(
-      { giftCardId: item.id, data: { userId: backendUserId, walletAddress: user.evmAddress } },
+      { giftCardId: item.id },
       {
         onSuccess: (res) => {
           toast.success(`Redeemed $${formatAmount(res.amount)} USDC`);

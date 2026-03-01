@@ -6,23 +6,14 @@ import { toast } from "sonner";
 import { motion } from "motion/react";
 import { useSendParams } from "@/hooks/use-send-params";
 import { useGiftCardPolling } from "@/hooks/use-gift-card-polling";
-import { useCdpAuth } from "@/hooks/use-cdp-auth";
-import { useBackendUser } from "@/components/providers/backend-user-context";
 import { Spinner } from "@/components/ui/spinner";
 
 export default function ProcessingPage() {
   const router = useRouter();
-  const { user } = useCdpAuth();
-  const { backendUserId: contextUserId } = useBackendUser();
   const [params] = useSendParams();
-  const { giftCardId, userId: urlUserId } = params;
-  const backendUserId = urlUserId ?? contextUserId;
+  const { giftCardId } = params;
 
-  const { data: giftCard } = useGiftCardPolling({
-    giftCardId,
-    userId: backendUserId,
-    walletAddress: user?.evmAddress,
-  });
+  const { data: giftCard } = useGiftCardPolling({ giftCardId });
 
   useEffect(() => {
     if (!giftCard) return;

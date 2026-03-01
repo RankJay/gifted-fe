@@ -4,6 +4,7 @@ import "./globals.css";
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
 import { Web3Provider } from "@/components/providers/web3-provider";
 import { BackendUserProvider } from "@/components/providers/backend-user-context";
+import { AuthTokenProvider } from "@/components/providers/auth-token-context";
 import { Toaster } from "@/components/ui/sonner";
 import { CDPProvider } from "@/components/providers/cdp-provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
@@ -37,7 +38,9 @@ export default function RootLayout({
           <CDPProvider>
             <ReactQueryProvider>
               <BackendUserProvider>
-                <Web3Provider>{children}</Web3Provider>
+                <AuthTokenProvider>
+                  <Web3Provider>{children}</Web3Provider>
+                </AuthTokenProvider>
               </BackendUserProvider>
             </ReactQueryProvider>
             <Toaster />

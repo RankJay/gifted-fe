@@ -37,8 +37,6 @@ export default function SendPage() {
     setIsPayingWithBalance(true);
     try {
       const card = await createGiftCard({
-        userId: backendUserId,
-        walletAddress: user.evmAddress,
         amount: parseFloat(amount),
         personalMessage: message || undefined,
         recipientEmail: email || undefined,
@@ -69,11 +67,11 @@ export default function SendPage() {
 
       let res;
       let lastError: Error | null = null;
-      for (let attempt = 0; attempt < 3; attempt++) {
+      for (let attempt = 0; attempt < 7; attempt++) {
         try {
           res = await confirmFunding({
             giftCardId: card.giftCardId,
-            data: { userId: backendUserId, walletAddress: user.evmAddress, txHash: hash },
+            data: { txHash: hash },
           });
           break;
         } catch (err) {
@@ -100,8 +98,6 @@ export default function SendPage() {
     setIsCreatingOnramp(true);
     try {
       const res = await createGiftCard({
-        userId: backendUserId,
-        walletAddress: user.evmAddress,
         amount: parseFloat(amount),
         personalMessage: message || undefined,
         recipientEmail: email || undefined,
@@ -113,9 +109,7 @@ export default function SendPage() {
         return;
       }
 
-      // CDP onramp redirects back; processing page polls for status
-      const returnUrl = `${window.location.origin}/dashboard/send/processing?giftCardId=${res.giftCardId}`;
-      window.location.href = `${res.onrampUrl}&redirectUrl=${encodeURIComponent(returnUrl)}`;
+      window.location.href = res.onrampUrl;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to initiate Apple Pay");
     } finally {
@@ -131,8 +125,6 @@ export default function SendPage() {
     setIsNavigatingExternal(true);
     try {
       const card = await createGiftCard({
-        userId: backendUserId,
-        walletAddress: user.evmAddress,
         amount: parseFloat(amount),
         personalMessage: message || undefined,
         recipientEmail: email || undefined,

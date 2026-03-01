@@ -1,9 +1,7 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiRequestWithAuth } from "./client";
 import type { PaymentMethod } from "../constants";
 
 export interface InitiateGiftCardRequest {
-  userId: string;
-  walletAddress: string;
   amount: number;
   personalMessage?: string;
   recipientEmail?: string;
@@ -19,8 +17,6 @@ export interface InitiateGiftCardResponse {
 }
 
 export interface ConfirmEoaFundingRequest {
-  userId: string;
-  walletAddress: string;
   txHash: string;
 }
 
@@ -30,15 +26,16 @@ export interface ConfirmEoaFundingResponse {
   claimLink: string;
 }
 
-export interface RedeemGiftCardRequest {
-  userId: string;
-  walletAddress: string;
-}
-
 export interface RedeemGiftCardResponse {
   giftCardId: string;
   amount: string;
   txHash: string;
+  status: string;
+}
+
+export interface ClaimGiftCardResponse {
+  giftCardId: string;
+  amount: string;
   status: string;
 }
 
@@ -62,15 +59,11 @@ export interface GiftCardDetailResponse {
   claimLink: string | null;
 }
 
-export interface GetGiftCardRequest {
-  userId: string;
-  walletAddress: string;
-}
-
 export async function initiateGiftCard(
   req: InitiateGiftCardRequest,
+  token: string,
 ): Promise<InitiateGiftCardResponse> {
-  return apiRequest<InitiateGiftCardResponse>("/giftcard/initiate", {
+  return apiRequestWithAuth<InitiateGiftCardResponse>("/giftcard/initiate", token, {
     method: "POST",
     body: JSON.stringify(req),
   });
@@ -79,31 +72,51 @@ export async function initiateGiftCard(
 export async function confirmEoaFunding(
   giftCardId: string,
   req: ConfirmEoaFundingRequest,
+  token: string,
 ): Promise<ConfirmEoaFundingResponse> {
-  return apiRequest<ConfirmEoaFundingResponse>(`/giftcard/${giftCardId}/confirm-eoa-funding`, {
-    method: "POST",
-    body: JSON.stringify(req),
-  });
+  return apiRequestWithAuth<ConfirmEoaFundingResponse>(
+    `/giftcard/${giftCardId}/confirm-eoa-funding`,
+    token,
+    {
+      method: "POST",
+      body: JSON.stringify(req),
+    },
+  );
 }
 
 export async function redeemGiftCard(
   giftCardId: string,
-  req: RedeemGiftCardRequest,
+  token: string,
 ): Promise<RedeemGiftCardResponse> {
-  return apiRequest<RedeemGiftCardResponse>(`/giftcard/${giftCardId}/redeem`, {
+  return apiRequestWithAuth<RedeemGiftCardResponse>(`/giftcard/${giftCardId}/redeem`, token, {
     method: "POST",
-    body: JSON.stringify(req),
+    body: JSON.stringify({}),
   });
 }
 
 export async function getGiftCardById(
   giftCardId: string,
-  req: GetGiftCardRequest,
+  token: string,
 ): Promise<GiftCardDetailResponse> {
-  const query = new URLSearchParams({
-    userId: req.userId,
-    walletAddress: req.walletAddress,
-  });
+  return apiRequestWithAuth<GiftCardDetailResponse>(`/giftcard/${giftCardId}`, token);
+}
 
-  return apiRequest<GiftCardDetailResponse>(`/giftcard/${giftCardId}?${query.toString()}`);
+export async function getUserGiftCards(userId: string, token: string) {
+  return apiRequestWithAuth(`/user/${userId}/gift-cards`, token);
+}
+
+// Claim preview is public (no auth needed)
+export async function getClaimPreview(claimSecret: string) {
+  return apiRequest(`/giftcard/claim/${claimSecret}`);
+}
+
+// Claim gift card uses a claim secret; still requires user auth
+export async function claimGiftCard(
+  claimSecret: string,
+  token: string,
+): Promise<ClaimGiftCardResponse> {
+  return apiRequestWithAuth<ClaimGiftCardResponse>(`/giftcard/claim/${claimSecret}`, token, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
 }
