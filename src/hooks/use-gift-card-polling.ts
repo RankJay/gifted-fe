@@ -2,25 +2,22 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getGiftCardById } from "@/lib/api/gift-card";
+import { useAuthToken } from "@/components/providers/auth-token-context";
 
 const TERMINAL_STATUSES = new Set(["active", "claimed", "redeemed", "payment_failed"]);
 const MAX_POLL_ATTEMPTS = 30;
 
 interface UseGiftCardPollingOptions {
   giftCardId: string | null;
-  userId: string | null;
-  walletAddress: string | undefined;
 }
 
-export function useGiftCardPolling({
-  giftCardId,
-  userId,
-  walletAddress,
-}: UseGiftCardPollingOptions) {
+export function useGiftCardPolling({ giftCardId }: UseGiftCardPollingOptions) {
+  const { token } = useAuthToken();
+
   return useQuery({
     queryKey: ["gift-card-poll", giftCardId],
-    queryFn: () => getGiftCardById(giftCardId!, { userId: userId!, walletAddress: walletAddress! }),
-    enabled: !!giftCardId && !!userId && !!walletAddress,
+    queryFn: () => getGiftCardById(giftCardId!, token!),
+    enabled: !!giftCardId && !!token,
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data) return 2000;

@@ -5,29 +5,22 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { Check } from "lucide-react";
 import { useSendParams } from "@/hooks/use-send-params";
-import { useCdpAuth } from "@/hooks/use-cdp-auth";
-import { useBackendUser } from "@/components/providers/backend-user-context";
 import { getGiftCardById } from "@/lib/api/gift-card";
 import { AmountHeader } from "@/components/send/amount-header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthToken } from "@/components/providers/auth-token-context";
 
 export default function SuccessPage() {
-  const { user } = useCdpAuth();
-  const { backendUserId: contextUserId } = useBackendUser();
+  const { token } = useAuthToken();
   const [params] = useSendParams();
-  const { giftCardId, userId: urlUserId } = params;
-  const backendUserId = urlUserId ?? contextUserId;
+  const { giftCardId } = params;
 
   const [copied, setCopied] = useState(false);
 
   const { data: giftCard, isLoading } = useQuery({
     queryKey: ["gift-card-success", giftCardId],
-    queryFn: () =>
-      getGiftCardById(giftCardId!, {
-        userId: backendUserId!,
-        walletAddress: user!.evmAddress as string,
-      }),
-    enabled: !!giftCardId && !!backendUserId && !!user?.evmAddress,
+    queryFn: () => getGiftCardById(giftCardId!, token!),
+    enabled: !!giftCardId && !!token,
     staleTime: Infinity,
     retry: 2,
   });

@@ -6,19 +6,14 @@ import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { AmountHeader } from "@/components/send/amount-header";
 import { useSendParams } from "@/hooks/use-send-params";
-import { useCdpAuth } from "@/hooks/use-cdp-auth";
-import { useBackendUser } from "@/components/providers/backend-user-context";
 import { useExternalWallet } from "@/hooks/use-external-wallet";
 import { useConfirmEoaFunding } from "@/hooks/use-confirm-funding";
 import { validateTxHash } from "@/lib/validation";
 
 export default function ExternalWalletPage() {
   const router = useRouter();
-  const { user } = useCdpAuth();
-  const { backendUserId: contextUserId } = useBackendUser();
   const [params] = useSendParams();
-  const { amount, message, giftCardId, treasuryAddress, totalCharged, userId: urlUserId } = params;
-  const backendUserId = urlUserId ?? contextUserId;
+  const { amount, message, giftCardId, treasuryAddress, totalCharged } = params;
 
   const externalWallet = useExternalWallet();
   const { mutateAsync: confirmFunding, isPending: isConfirming } = useConfirmEoaFunding();
@@ -33,17 +28,14 @@ export default function ExternalWalletPage() {
       externalWallet.connect();
       return;
     }
-    if (!giftCardId || !treasuryAddress || !totalCharged || !user?.evmAddress || !backendUserId) {
+    if (!giftCardId || !treasuryAddress || !totalCharged) {
       toast.error("Missing payment details");
       return;
     }
     setIsSending(true);
     try {
       const hash = await externalWallet.sendUsdcTo(treasuryAddress, totalCharged);
-      await confirmFunding({
-        giftCardId,
-        data: { userId: backendUserId, walletAddress: user.evmAddress, txHash: hash },
-      });
+      await confirmFunding({ giftCardId, data: { txHash: hash } });
       router.push(`/dashboard/send/success?giftCardId=${giftCardId}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Transaction failed");
@@ -53,12 +45,9 @@ export default function ExternalWalletPage() {
   };
 
   const handleConfirmManual = async () => {
-    if (!giftCardId || !user?.evmAddress || !backendUserId || txHashError) return;
+    if (!giftCardId || txHashError) return;
     try {
-      await confirmFunding({
-        giftCardId,
-        data: { userId: backendUserId, walletAddress: user.evmAddress, txHash: txHash.trim() },
-      });
+      await confirmFunding({ giftCardId, data: { txHash: txHash.trim() } });
       router.push(`/dashboard/send/success?giftCardId=${giftCardId}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to confirm transaction");

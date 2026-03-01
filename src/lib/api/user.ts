@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiRequestWithAuth } from "./client";
 import type { GiftCardSummary } from "./types";
 
 export interface RegisterRequest {
@@ -24,6 +24,9 @@ export async function registerUser(req: RegisterRequest): Promise<RegisterRespon
   });
 }
 
-export async function getUserGiftCards(userId: string): Promise<UserGiftCardsResponse> {
-  return apiRequest<UserGiftCardsResponse>(`/user/${userId}/gift-cards`);
+export async function getUserGiftCards(
+  userId: string,
+  token: string,
+): Promise<UserGiftCardsResponse> {
+  return apiRequestWithAuth<UserGiftCardsResponse>(`/user/${userId}/gift-cards`, token);
 }
