@@ -33,6 +33,12 @@ export interface RedeemGiftCardResponse {
   status: string;
 }
 
+export interface ClaimGiftCardResponse {
+  giftCardId: string;
+  amount: string;
+  status: string;
+}
+
 export interface GiftCardDetailResponse {
   id: string;
   senderId: string;
@@ -105,8 +111,11 @@ export async function getClaimPreview(claimSecret: string) {
 }
 
 // Claim gift card uses a claim secret; still requires user auth
-export async function claimGiftCard(claimSecret: string, token: string) {
-  return apiRequestWithAuth(`/giftcard/claim/${claimSecret}`, token, {
+export async function claimGiftCard(
+  claimSecret: string,
+  token: string,
+): Promise<ClaimGiftCardResponse> {
+  return apiRequestWithAuth<ClaimGiftCardResponse>(`/giftcard/claim/${claimSecret}`, token, {
     method: "POST",
     body: JSON.stringify({}),
   });
