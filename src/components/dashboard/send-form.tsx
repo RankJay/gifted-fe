@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { motion, useAnimation } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useCdpAuth } from "@/hooks/use-cdp-auth";
 import { useRegisterAndThen } from "@/hooks/use-register-and-then";
 import { validateAmount, validateEmail } from "@/lib/validation";
+import { cn } from "@/lib/utils";
 
 export function SendForm() {
   const router = useRouter();
@@ -16,6 +18,21 @@ export function SendForm() {
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
+  const [isOverLimit, setIsOverLimit] = useState(false);
+
+  const shiverControls = useAnimation();
+  const shiverDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const triggerShiver = useCallback(() => {
+    if (shiverDebounce.current) clearTimeout(shiverDebounce.current);
+    shiverDebounce.current = setTimeout(() => {
+      shiverDebounce.current = null;
+      shiverControls.start({
+        x: [0, -6, 6, -5, 5, -3, 3, 0],
+        transition: { duration: 0.45, ease: "easeInOut" },
+      });
+    }, 250);
+  }, [shiverControls]);
 
   const amountError = amount ? validateAmount(amount) : null;
   const emailError = email ? validateEmail(email) : null;
@@ -43,15 +60,27 @@ export function SendForm() {
       {/* Amount Input */}
       <div className="flex flex-col items-center">
         <div className="relative flex items-center justify-center">
-          <input
+          <motion.input
             type="number"
+            inputMode="decimal"
             min="2"
             max="100"
             step="0.01"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            animate={shiverControls}
+            onChange={(e) => {
+              const val = e.target.value;
+              setAmount(val);
+              const num = parseFloat(val);
+              if (!isNaN(num) && num > 100) {
+                setIsOverLimit(true);
+                triggerShiver();
+              } else {
+                setIsOverLimit(false);
+              }
+            }}
             placeholder="0.00"
-            className="w-full text-center text-7xl font-bold bg-transparent tracking-tighter border-none outline-none text-foreground placeholder:text-[#CCCCCC] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            className={cn("w-full text-center text-7xl font-bold bg-transparent tracking-tighter border-none outline-none text-foreground placeholder:text-[#CCCCCC] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none", isOverLimit ? "text-rose-600" : "text-foreground")}
             aria-label="Gift card amount"
           />
         </div>

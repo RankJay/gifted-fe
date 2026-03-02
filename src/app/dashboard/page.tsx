@@ -30,7 +30,12 @@ export default function DashboardPage() {
   return (
     <PageContainer>
       {/* Balance */}
-      <BalanceDisplay balance={balance} isLoading={balanceLoading} />
+      <BalanceDisplay
+        balance={balance}
+        isLoading={balanceLoading}
+        address={user?.evmAddress}
+        email={user?.email}
+      />
 
       {/* Send form */}
       <SendForm />

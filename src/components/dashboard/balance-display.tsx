@@ -2,15 +2,20 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WalletMenu } from "@/components/dashboard/wallet-menu";
 
 interface BalanceDisplayProps {
   balance: string;
   isLoading: boolean;
+  address?: string;
+  ensName?: string;
+  email?: string;
 }
 
-export function BalanceDisplay({ balance, isLoading }: BalanceDisplayProps) {
+export function BalanceDisplay({ balance, isLoading, address, ensName, email }: BalanceDisplayProps) {
   return (
     <div className="flex flex-col items-center gap-1 pt-8 pb-6">
+      {/* <WalletMenu address={address} ensName={ensName} email={email} /> */}
       <p className="text-sm text-neutral-400 font-medium">Current balance</p>
       <div className="flex relative items-baseline gap-2 mt-1">
         <AnimatePresence mode="wait">
