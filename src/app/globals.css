@@ -129,6 +129,10 @@ html::-webkit-scrollbar {
   display: none;
 }
 
+html {
+  overscroll-behavior: none
+}
+
 .scrollbar-none {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;

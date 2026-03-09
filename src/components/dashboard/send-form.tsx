@@ -68,6 +68,7 @@ export function SendForm() {
             step="0.01"
             value={amount}
             animate={shiverControls}
+            onWheel={(e) => e.currentTarget.blur()}
             onChange={(e) => {
               const val = e.target.value;
               setAmount(val);
